@@ -21,7 +21,7 @@ auto XlsxParser::parse() const -> Result
     const auto TsSupportVersion = QVersionNumber(4, 5, 0);
     InOutParameter p{ "", "", m_ioParameter.tsVersion, {} };
     if (QVersionNumber::compare(currentVersion, TsSupportVersion) >= 0) {
-        p.tsVersion = xlsx.read(2, 1).toString();
+        p.tsVersion = xlsx.cellAt(2, 1)->value().toString();
         offsetRow   = 2;
     }
 
@@ -40,16 +40,16 @@ auto XlsxParser::parse() const -> Result
     const auto lastColumn = xlsx.dimension().lastColumn();
 
     for (auto row = 2; row <= lastRow; ++row) {
-        context.name    = xlsx.read(row, 1).toString();
-        msg.source      = xlsx.read(row, 2).toString();
-        msg.translation = xlsx.read(row, 3).toString();
+        context.name    = xlsx.cellAt(row, 1)->value().toString();
+        msg.source      = xlsx.cellAt(row, 2)->value().toString();
+        msg.translation = xlsx.cellAt(row, 3)->value().toString();
 
         for (auto col = 4; col <= lastColumn; ++col) {
-            const auto loc = xlsx.read(row, col).toString();
-            if (loc.isEmpty()) {
+            const auto loc = xlsx.cellAt(row, col);
+            if (!loc || loc->value().toString().isEmpty()) {
                 break;
             }
-            auto list = loc.split(QStringLiteral(" - "));
+            auto list = loc->value().toString().split(QStringLiteral(" - "));
             msg.locations.emplace_back(
                 std::make_pair(list.first(), list.last().toInt()));
         }
